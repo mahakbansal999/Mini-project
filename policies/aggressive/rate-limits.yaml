@@ -1,0 +1,7 @@
+rate_limits:
+  free:
+    user: 5
+    client: 2
+  pro:
+    user: 50
+    client: 20

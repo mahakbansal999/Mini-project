@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Throttling Sentinel - Secure Access</title>
+</head>
+
+<body>
+  <div id="app">
+    <!-- Login Section -->
+    <section id="login-screen" class="login-container">
+      <div class="login-card glass-pane">
+        <div class="login-header">
+          <div class="logo-orb"></div>
+          <h2>SENTINEL ACCESS</h2>
+          <p>Please log in to access the Throttling Manager</p>
+        </div>
+
+        <form id="login-form">
+          <div class="input-group">
+            <label>SYSTEM IDENTIFIER</label>
+            <input type="text" id="login-username" placeholder="Admin Username" required>
+          </div>
+          <div class="input-group">
+            <label>SECURITY TOKEN</label>
+            <input type="password" id="login-password" placeholder="••••••••" required>
+          </div>
+
+          <div id="login-error" class="error-msg" style="display: none;">
+            Invalid credentials. Access denied.
+          </div>
+
+          <button type="submit" id="btn-login" class="btn-primary">
+            <span class="btn-text">AUTHORIZE ACCESS</span>
+            <div class="btn-loader"
+              style="display: none; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 0 auto;">
+            </div>
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <p>Secured by AES-256 Throttling Protocol</p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="/src/auth.js"></script>
+  <style>
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</body>
+
+</html>

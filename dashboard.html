@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Throttling Manager - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-healthy {
+            background: #10b981;
+        }
+
+        .status-warning {
+            background: #f59e0b;
+        }
+
+        .status-error {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metric {
+            margin: 15px 0;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .test-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .response-box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-header {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .rate-limit-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .rate-limit-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .rate-limit-badge .label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .rate-limit-badge .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #667eea 100%);
+            transition: width 0.3s ease;
+        }
+
+        .endpoint-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .endpoint-item {
+            background: #f9fafb;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .endpoint-method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Request Throttling Manager</h1>
+            <p class="subtitle">Advanced API Rate Limiting Dashboard</p>
+        </header>
+
+        <div class="dashboard">
+            <!-- System Health Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">💚</span>
+                    <h2 class="card-title">System Health</h2>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Status</div>
+                    <div class="metric-value">
+                        <span class="status-indicator status-healthy" id="health-indicator"></span>
+                        <span id="health-status">Checking...</span>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Available Capacity</div>
+                    <div class="metric-value" id="capacity-value">--</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">System Load</div>
+                    <div class="metric-value" id="system-load">--</div>
+                </div>
+            </div>
+
+            <!-- Rate Limits Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⚡</span>
+                    <h2 class="card-title">Current Rate Limits</h2>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Limit</div>
+                    <div class="metric-value" id="rate-limit">--</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Remaining</div>
+                    <div class="metric-value" id="rate-remaining">--</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="rate-progress" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Reset Time</div>
+                    <div class="metric-value" id="rate-reset">--</div>
+                </div>
+            </div>
+
+            <!-- Available Endpoints Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🔗</span>
+                    <h2 class="card-title">Available Endpoints</h2>
+                </div>
+                <ul class="endpoint-list">
+                    <li class="endpoint-item">
+                        <div>
+                            <span class="endpoint-method method-post">POST</span>
+                            <span>/api/orders</span>
+                        </div>
+                        <span>Throttled</span>
+                    </li>
+                    <li class="endpoint-item">
+                        <div>
+                            <span class="endpoint-method method-post">POST</span>
+                            <span>/api/heavy-task</span>
+                        </div>
+                        <span>Throttled</span>
+                    </li>
+                    <li class="endpoint-item">
+                        <div>
+                            <span class="endpoint-method method-get">GET</span>
+                            <span>/api/status</span>
+                        </div>
+                        <span>Throttled</span>
+                    </li>
+                    <li class="endpoint-item">
+                        <div>
+                            <span class="endpoint-method method-get">GET</span>
+                            <span>/health</span>
+                        </div>
+                        <span>Public</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- API Tester Section -->
+        <div class="test-section">
+            <div class="card-header">
+                <span class="card-icon">🧪</span>
+                <h2 class="card-title">API Tester</h2>
+            </div>
+            
+            <div class="test-controls">
+                <input type="text" id="api-key" placeholder="API Key (e.g., test-user-123)" value="test-user-123">
+                <select id="endpoint">
+                    <option value="/api/status">GET /api/status</option>
+                    <option value="/api/orders">POST /api/orders</option>
+                    <option value="/api/heavy-task">POST /api/heavy-task</option>
+                    <option value="/health">GET /health</option>
+                </select>
+                <input type="number" id="complexity" placeholder="Complexity (1-10)" value="1" min="1" max="10">
+                <button onclick="sendRequest()">Send Request</button>
+                <button onclick="sendBurst()">Send Burst (10 requests)</button>
+                <button onclick="refreshHealth()">Refresh Health</button>
+            </div>
+
+            <div class="rate-limit-info" id="rate-limit-badges" style="display: none;">
+                <div class="rate-limit-badge">
+                    <div class="label">Limit</div>
+                    <div class="value" id="badge-limit">--</div>
+                </div>
+                <div class="rate-limit-badge">
+                    <div class="label">Remaining</div>
+                    <div class="value" id="badge-remaining">--</div>
+                </div>
+                <div class="rate-limit-badge">
+                    <div class="label">Reset In</div>
+                    <div class="value" id="badge-reset">--</div>
+                </div>
+            </div>
+
+            <div class="response-box" id="response">
+                <div class="response-header">Response:</div>
+                <div id="response-content">Click "Send Request" to test the API</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        async function refreshHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                document.getElementById('health-status').textContent = data.status || 'Unknown';
+                document.getElementById('capacity-value').textContent = 
+                    data.capacity?.availableCapacity ? `${data.capacity.availableCapacity} req/s` : 'N/A';
+                
+                const cpuLoad = data.capacity?.systemLoad?.cpu_percent || 0;
+                const memLoad = data.capacity?.systemLoad?.memory_percent || 0;
+                document.getElementById('system-load').textContent = 
+                    `CPU: ${cpuLoad}% | Mem: ${memLoad}%`;
+                
+                const indicator = document.getElementById('health-indicator');
+                indicator.className = 'status-indicator ' + 
+                    (data.status === 'healthy' ? 'status-healthy' : 'status-warning');
+            } catch (error) {
+                document.getElementById('health-status').textContent = 'Error';
+                document.getElementById('health-indicator').className = 'status-indicator status-error';
+            }
+        }
+
+        async function sendRequest() {
+            const apiKey = document.getElementById('api-key').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const complexity = document.getElementById('complexity').value;
+            
+            const responseDiv = document.getElementById('response-content');
+            responseDiv.innerHTML = '<div class="loading"></div> Sending request...';
+
+            try {
+                const options = {
+                    method: endpoint.includes('POST') ? 'POST' : 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey
+                    }
+                };
+
+                if (options.method === 'POST') {
+                    options.body = JSON.stringify({ complexity: parseInt(complexity), items: [1, 2, 3] });
+                }
+
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+
+                // Update rate limit info
+                const limit = response.headers.get('X-RateLimit-Limit');
+                const remaining = response.headers.get('X-RateLimit-Remaining');
+                const reset = response.headers.get('X-RateLimit-Reset');
+
+                if (limit) {
+                    document.getElementById('rate-limit-badges').style.display = 'grid';
+                    document.getElementById('rate-limit').textContent = limit;
+                    document.getElementById('rate-remaining').textContent = remaining;
+                    document.getElementById('badge-limit').textContent = limit;
+                    document.getElementById('badge-remaining').textContent = remaining;
+                    
+                    const percentage = (remaining / limit) * 100;
+                    document.getElementById('rate-progress').style.width = percentage + '%';
+                    
+                    if (reset) {
+                        const resetTime = new Date(reset * 1000);
+                        const now = new Date();
+                        const secondsUntilReset = Math.max(0, Math.floor((resetTime - now) / 1000));
+                        document.getElementById('rate-reset').textContent = `${secondsUntilReset}s`;
+                        document.getElementById('badge-reset').textContent = `${secondsUntilReset}s`;
+                    }
+                }
+
+                // Display response
+                responseDiv.innerHTML = `
+                    <div class="response-header">Status: ${response.status} ${response.statusText}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    ${limit ? `
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #e5e7eb;">
+                        <strong>Rate Limit Headers:</strong><br>
+                        X-RateLimit-Limit: ${limit}<br>
+                        X-RateLimit-Remaining: ${remaining}<br>
+                        X-RateLimit-Reset: ${reset}
+                    </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `<div style="color: #ef4444;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function sendBurst() {
+            const responseDiv = document.getElementById('response-content');
+            responseDiv.innerHTML = '<div class="loading"></div> Sending 10 requests...';
+
+            const results = { allowed: 0, throttled: 0 };
+            
+            for (let i = 0; i < 10; i++) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/orders`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': document.getElementById('api-key').value
+                        },
+                        body: JSON.stringify({ complexity: 1, items: [1, 2, 3] })
+                    });
+
+                    if (response.status === 200) results.allowed++;
+                    else if (response.status === 429) results.throttled++;
+                } catch (error) {
+                    console.error('Request failed:', error);
+                }
+            }
+
+            responseDiv.innerHTML = `
+                <div class="response-header">Burst Test Results:</div>
+                <pre>Total Requests: 10
+Allowed: ${results.allowed}
+Throttled (429): ${results.throttled}
+
+This demonstrates the token bucket algorithm:
+- Initial burst is allowed up to capacity
+- Subsequent requests are throttled
+- Tokens refill over time based on refill rate</pre>
+            `;
+
+            // Refresh to show updated limits
+            await sendRequest();
+        }
+
+        // Auto-refresh health every 5 seconds
+        setInterval(refreshHealth, 5000);
+        
+        // Initial load
+        refreshHealth();
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "policy_name": "aggressive",
+  "base_limit": 50,
+  "refill_rate": 5,
+  "burst_allow": 1.2
+}

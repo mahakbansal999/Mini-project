@@ -1,0 +1,39 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Ramp up"
+    - duration: 300
+      arrivalRate: 100
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 200
+      name: "Spike test"
+  defaults:
+    headers:
+      x-api-key: "test-key-123"
+scenarios:
+  - name: "API requests with different complexities"
+    weight: 80
+    requests:
+      - post:
+          url: "/api/orders"
+          json:
+            complexity: 1
+            items: [1, 2, 3]
+      - post:
+          url: "/api/orders"
+          json:
+            complexity: 5
+            items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      - get:
+          url: "/api/status"
+  - name: "Health check"
+    weight: 20
+    requests:
+      - get:
+          url: "/health"

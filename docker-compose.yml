@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/throttling
+      - REDIS_URI=redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    # Signal handling for graceful shutdown
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+
+  mongo:
+    image: mongo:6
+    volumes:
+      - mongo-data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=throttling
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # Traffic smoother as sidecar
+  smoother:
+    build:
+      context: ./scripts/traffic-smoother
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/throttling
+      - REDIS_HOST=redis
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  redis-data:

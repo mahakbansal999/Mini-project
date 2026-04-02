@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Throttling Sentinel - Dashboard</title>
+</head>
+
+<body>
+    <div id="app">
+        <div id="dashboard-content">
+            <header class="glass-pane">
+                <div class="logo-group">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <h1>THROTTLING SENTINEL</h1>
+                        <button id="btn-logout" class="btn-ghost" style="width: auto;">LOGOUT</button>
+                    </div>
+                    <p class="subtitle">Intelligent Capacity & Rate Limit Monitoring</p>
+                </div>
+                <div class="system-badge">
+                    <div class="pulse"></div>
+                    <span id="system-status-text">SYSTEM OPERATIONAL</span>
+                </div>
+            </header>
+
+            <main class="dashboard-grid">
+                <!-- Live Metrics Section -->
+                <section class="col-span-12 dashboard-grid">
+                    <div class="col-span-3 card glass-pane">
+                        <div class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                            </svg>
+                            AVAILABLE CAPACITY
+                        </div>
+                        <div class="metric-value"><span id="metric-capacity">--</span></div>
+                        <div class="metric-unit">REQUESTS / SECOND (SYS MAX)</div>
+                    </div>
+
+                    <div class="col-span-3 card glass-pane">
+                        <div class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg>
+                            SYSTEM LOAD
+                        </div>
+                        <div class="metric-value"><span id="metric-load">--</span><span class="metric-unit">%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div id="load-progress-bar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-3 card glass-pane">
+                        <div class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 6v6l4 2" />
+                            </svg>
+                            NEXT RESET
+                        </div>
+                        <div class="metric-value"><span id="metric-reset">--</span><span class="metric-unit">s</span>
+                        </div>
+                        <div class="metric-unit">TOKEN BUCKET REFILL WINDOW</div>
+                    </div>
+
+                    <div class="col-span-3 card glass-pane">
+                        <div class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                                <line x1="12" y1="22.08" x2="12" y2="12" />
+                            </svg>
+                            BUCKET STATUS
+                        </div>
+                        <div class="metric-value"><span id="metric-tokens">--</span></div>
+                        <div id="tokens-status-tag" class="metric-unit">READY TO SERVE</div>
+                    </div>
+                </section>
+
+                <!-- API Tester Section -->
+                <section class="col-span-4 card glass-pane">
+                    <div class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                        API COMMAND CENTER
+                    </div>
+
+                    <div class="input-group">
+                        <label>API CREDENTIALS</label>
+                        <input type="text" id="api-key" placeholder="Enter X-API-KEY..." value="enterprise-key-001">
+                    </div>
+
+                    <div class="input-group">
+                        <label>TARGET ENDPOINT</label>
+                        <select id="api-endpoint">
+                            <option value="/api/status">GET /api/status [LIGHT]</option>
+                            <option value="/api/orders">POST /api/orders [MEDIUM]</option>
+                            <option value="/api/heavy-task">POST /api/heavy-task [CRITICAL]</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>REQUEST COMPLEXITY</label>
+                        <input type="range" id="api-complexity" min="1" max="10" value="1">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                            <span>LIGHT</span>
+                            <span id="complexity-label">COST: 1 TOKENS</span>
+                            <span>HEAVY</span>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <button id="btn-fire" style="grid-column: span 2;">🔥 FIRE REQUEST</button>
+                        <button id="btn-burst" style="background: var(--accent); white-space: nowrap;">⚡ BURST
+                            MODE</button>
+                        <button id="btn-clear" style="background: rgba(255,255,255,0.05);">🧹 CLEAR LOGS</button>
+                    </div>
+                </section>
+
+                <!-- Logs Section -->
+                <section class="col-span-8 card glass-pane">
+                    <div class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-10.6 8.5 8.5 0 0 1 4.6 1.4L21 4v8h-8l3.4-3.4" />
+                        </svg>
+                        TRAFFIC TELEMETRY
+                    </div>
+                    <div id="log-display" class="log-container">
+                        <div class="log-entry" style="color: var(--text-muted); opacity: 0.5;">
+                            <span>INIT</span>
+                            <span>Waiting for API traffic telemetry...</span>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    <script type="module" src="/src/dashboard.js"></script>
+</body>
+
+</html>

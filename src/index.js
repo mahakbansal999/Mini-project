@@ -7,6 +7,9 @@ const GracefulThrottleInterrupt = require('./utils/signalHandler');
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/throttling';
 const REDIS_URI = process.env.REDIS_URI || 'redis://localhost:6379';
+console.log(`Starting server at ${new Date().toLocaleString()}`);
+console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+console.log('Initializing database and cache connections...');
 
 mongoose.connect(MONGO_URI).then(() => {
     console.log('Connected to MongoDB');
